@@ -1,0 +1,12 @@
+{
+    "resourceType": "ValueSet",
+    "status": "active",
+    "id": "namaste-ayurveda",
+    "name": "NAMASTE Ayurveda Terms",
+    "compose": {
+      "include": [
+        { "system": "http://id.who.int/icd/release/11", "concept": [] }
+      ]
+    }
+  }
+  

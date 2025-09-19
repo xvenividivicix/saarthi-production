@@ -1,0 +1,35 @@
+<!-- Basic UI HTML -->
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>SAARTHI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, Arial; padding: 20px; max-width: 900px; margin: auto; }
+    input, button, textarea { padding: 8px; font-size: 14px; }
+    table { border-collapse: collapse; width:100%; margin-top:12px;}
+    th, td { border:1px solid #ddd; padding:8px; }
+    tr:hover { background:#f7f7f7; }
+    .row { display:flex; gap:8px; }
+  </style>
+</head>
+<body>
+  <h1>SAARTHI – ICD‑11 TM Coding & FHIR</h1>
+  <div class="row">
+    <input id="freeText" placeholder="Enter AYUSH diagnosis or therapy" style="flex:1" />
+    <button onclick="autocode()">Suggest Codes</button>
+  </div>
+  <div id="out"></div>
+  <hr/>
+  <h3>Export FHIR</h3>
+  <button onclick="exportFHIR()">Export Bundle</button>
+  <pre id="fhirOut"></pre>
+  <hr/>
+  <h3>Re‑import FHIR</h3>
+  <input type="file" id="bundleFile" />
+  <button onclick="reimport()">Re‑import</button>
+  <pre id="importOut"></pre>
+  <script src="app.js"></script>
+</body>
+</html>

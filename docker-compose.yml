@@ -1,0 +1,103 @@
+# Project name (optional but nice)
+name: saarthi
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: saarthi
+      POSTGRES_PASSWORD: saarthi
+      POSTGRES_DB: saarthi
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U saarthi"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [saarthi-net]
+    restart: unless-stopped
+
+  redis:
+    image: redis:7
+    command: ["redis-server","--save",""]
+    networks: [saarthi-net]
+    restart: unless-stopped
+
+  es:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks: [saarthi-net]
+    restart: unless-stopped
+
+  api:
+   build:
+    context: .
+    dockerfile: docker/Dockerfile.api
+   env_file: ./.env
+   depends_on:
+    - db
+    - es
+    - redis
+   ports:
+    - "8000:8000"
+   volumes:
+    - ./secrets:/run/secrets:ro
+    - ./data:/app/data
+   networks: [saarthi-net]
+   restart: unless-stopped
+
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+    volumes:
+      - .:/app  
+    env_file: ./.env
+    depends_on:
+      - db
+      - es
+    command: ["python","scripts/ingest_icd11_tm.py"]
+    networks: [saarthi-net]
+    restart: unless-stopped
+
+  ui:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./ui:/app
+    command: ["npx","http-server",".","-p","5173","-a","0.0.0.0"]
+    ports:
+      - "5173:5173"
+    networks: [saarthi-net]
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.25-alpine
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+      - ui
+    networks: [saarthi-net]
+    restart: unless-stopped
+
+volumes:
+  dbdata: {}
+  esdata: {}
+
+networks:
+  saarthi-net:
+    driver: bridge
